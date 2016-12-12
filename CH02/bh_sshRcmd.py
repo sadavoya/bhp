@@ -25,4 +25,4 @@ def ssh_command(ip_addr, user, passwd, command):
         client.close()
     return
 
-ssh_command('127.0.0.1', 'root', 'toor', 'ClientConnected')
+ssh_command('127.0.0.1', 'joker', 'whysoserious?', 'ClientConnected')
