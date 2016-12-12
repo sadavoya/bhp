@@ -68,3 +68,4 @@ def main():
         except:
             pass
         sys.exit(1)
+main()
