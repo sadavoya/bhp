@@ -3,13 +3,14 @@
 
 import socket
 import os
+import sys
 WINDOWS = 'nt'
 POSIX = 'posix'
 
 def main():
     '''sniffer'''
     # host ip to listen on
-    host = "192.168.124.128"
+    host = sys.argv[1]
 
     os_name = os.name.lower()
 
