@@ -32,7 +32,7 @@ class IP(Structure):
         # map protocol constants to their names
         self.protocol_map = {1:"ICMP", 6:"TCP", 17:"UDP"}
         # human readable IP addresses
-        print self.src
+        #print self.src
 
         self.src_address = socket.inet_ntoa(struct.pack("@I", self.src))
         self.dst_address = socket.inet_ntoa(struct.pack("@I", self.dst))
@@ -84,8 +84,10 @@ def main():
                 ip_header.dst_address)
     # Handle CTRL-C
     except KeyboardInterrupt:
-        print "Cleaning up"
+        print
+        print "Cleaning up..."
         if os.name == WINDOWS:
             sniffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
             print "Disabled promiscuous mode"
+        print "Done."
 main()
