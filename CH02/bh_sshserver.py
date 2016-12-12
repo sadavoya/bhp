@@ -17,7 +17,7 @@ class Server(paramiko.ServerInterface):
             return paramiko.OPEN_SUCCEEDED
         return paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
     def check_auth_password(self, username, password):
-        if (username == 'joker') and (password == 'whysoserious?'):
+        if (username == 'joker') and (password == 'joker'):
             return paramiko.AUTH_SUCCESSFUL
         return paramiko.AUTH_FAILED
 def main():
@@ -46,6 +46,7 @@ def main():
             print '[-] SSH negotiation failed.'
         chan = bh_session.accept(20)
         print '[+] Authenticated!'
+        
         print chan.recv(1024)
         chan.send('Welcome to bh_ssh')
         while True:
