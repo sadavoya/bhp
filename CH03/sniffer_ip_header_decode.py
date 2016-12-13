@@ -9,10 +9,14 @@ from ctypes import *
 
 WINDOWS = 'nt'
 POSIX = 'posix'
- 
+s_ICMP = 'ICMP'
+s_TCP = 'TCP'
+s_UDP = 'UDP'
+PROTOCOL_MAP = {1:s_ICMP, 6:s_TCP, 17:s_UDP}
+
 # our IP header
 class IP(Structure):
-    '''Header'''
+    '''IP Header'''
     _fields_ = [
         ("ihl", c_ubyte, 4),
         ("version", c_ubyte, 4),
@@ -38,9 +42,25 @@ class IP(Structure):
         self.dst_address = socket.inet_ntoa(struct.pack("@I", self.dst))
         # human readable protocol
         try:
-            self.protocol = self.protocol_map[self.protocol_num]
+            self.protocol = PROTOCOL_MAP[self.protocol_num]
         except:
             self.protocol = str(self.protocol_num)
+
+class ICMP(Structure):
+    '''ICMP Packet'''
+    _fields_ = [
+        ("type", c_ubyte),
+        ("code", c_ubyte),
+        ("checksum", c_ushort),
+        ("unused", c_ushort),
+        ("next_hop_mtu", c_ushort),
+    ]
+    def __new__(self, socket_buffer=None):
+        '''Create a new ICMP'''
+        return self.from_buffer_copy(socket_buffer)
+    def __init__(self, socket_buffer=None):
+        '''Initialize ICMP'''
+        pass
 
 def main():
     '''sniffer'''
@@ -82,6 +102,18 @@ def main():
                 ip_header.protocol,
                 ip_header.src_address,
                 ip_header.dst_address)
+            # if it's ICMP we want it'
+            if ip_header.protocol == s_ICMP:
+                # calculate where our ICMP packet starts
+                offset = ip_header.ihl * 4
+                buf = raw_buffer[offset:offset + sizeof(ICMP)]
+                # create our ICMP Structure
+                icmp_header = ICMP(buf)
+                print 'ICMP -> Type: %d Code: %d' % (
+                    icmp_header.type,
+                    icmp_header.code
+                )
+            
     # Handle CTRL-C
     except KeyboardInterrupt:
         print
