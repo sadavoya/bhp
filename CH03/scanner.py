@@ -68,11 +68,15 @@ def udp_sender(subnet, magic_message):
     '''Spray udp to the subnet'''
     time.sleep(5)
     sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    print 'Trying all IP address in subnet %s' % subnet
     for ip in IPNetwork(subnet):
+        #print 'Trying: %s' % ip
         try:
             sender.sendto(magic_message, ('%s' % ip, 65212))
         except:
             pass
+    print 'Finished trying all IP addresses in subnet %s' % subnet
+    
 
 def main():
     '''sniffer'''
@@ -116,11 +120,13 @@ def main():
             raw_buffer = sniffer.recvfrom(65565)[0]
             # create an ip header from the first 20 bytes of the buffer
             ip_header = IP(raw_buffer)
+            
             # print out the protocol that was detected and the hosts
-            print "Protocol: %s %s -> %s" % (
-                ip_header.protocol,
-                ip_header.src_address,
-                ip_header.dst_address)
+            #print "Protocol: %s %s -> %s" % (
+            #    ip_header.protocol,
+            #    ip_header.src_address,
+            #    ip_header.dst_address)
+
             # if it's ICMP we want it'
             if ip_header.protocol == s_ICMP:
                 # calculate where our ICMP packet starts
