@@ -34,7 +34,7 @@ def main():
     except Exception, e:
         print '[-] Listen failed: ' + str(e)
         sys.exit(1)
-    print '[+] Got a connection to %s:%d!' % (addr[1], addr[2])
+    #print '[+] Got a connection to %s:%d!' % (addr[1], addr[2])
 
     try:
         bh_session = paramiko.Transport(client)
