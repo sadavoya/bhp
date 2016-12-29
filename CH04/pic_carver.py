@@ -37,10 +37,13 @@ def get_http_headers(http_payload):
     '''get_http_headers'''
     try:
         # split the headers off if it is HTTP traffic
+        #print 'Getting raw headers...',
         headers_raw = http_payload[:http_payload.index(PAYLOAD_SPLITTER)+2]
+        #print 'Done.'
         # break out the headers
         headers = dict(re.findall(r"(?P<name>.*?): (?P<value>.*?)\r\n", headers_raw))
-    except:
+    except Exception as err:
+        #print str(err)
         return None
     if CONTENT_TYPE not in headers:
         return None
@@ -66,11 +69,26 @@ def extract_image(headers, http_payload):
     except:
         return None, None
     return image, image_type
-def face_detect(target, newfilename):
+def face_detect(target_img, output_file_name, highlight_color=(127, 255, 0)):
     '''detect if target contains a face
-    if so, save as newfilename 
+    if so, save as output_file_name
     '''
-    return False
+    img = cv2.imread(target_img)
+    cascade = cv2.CascadeClassifier("haarcascade_frontalface_alt.xml")
+    rects = cascade.detectMultiScale(img, 1.3, 4, cv2.cv.CV_HAAR_SCALE_IMAGE, (20, 20))
+
+    if len(rects) == 0:
+        return False
+
+    rects[:, 2:] += rects[:, :2]
+
+    # highlight the faces in the IMAGE
+
+    for (x1, y1, x2, y2) in rects:
+        cv2.rectangle(img, (x1, y1), (x2, y2), highlight_color, 2)
+
+    cv2.imwrite(output_file_name, img)
+    return True
 
 def http_assembler(ns):
     '''http_assembler'''
@@ -82,21 +100,29 @@ def http_assembler(ns):
     faces_detected = 0
 
     a = rdpcap(pcap_file)
+    #a.summary()
     sessions = a.sessions()
     for session in sessions:
+
         http_payload = ''
+        
         for packet in sessions[session]:
+            
             try:
                 if packet[TCP].dport == 80 or packet[TCP].sport == 80:
                     # reassemble the stream
+                    print 'Reassembling...',
+                    #print str(packet[TCP])
                     http_payload += str(packet[TCP].payload)
+                    print 'Done.'
             except:
                 pass
         headers = get_http_headers(http_payload)
         if headers is None:
             continue
+        print 'Extracting image...',
         image, image_type = extract_image(headers, http_payload)
-
+        print 'Done.'
         if image is not None and image_type is not None:
             # store the image
             file_name = '%s-pic_carver_%d.%s' % (pcap_file, carved_images, image_type)
@@ -108,8 +134,8 @@ def http_assembler(ns):
 
             # now attempt face detection
             try:
-                result = face_detect('%s/%s' % (pictures_dir, file_name), '%s/%s' % (faces_dir, file_name))
-                if result == True:
+                if face_detect('%s/%s' % (pictures_dir, file_name),
+                               '%s/%s-%s' % (faces_dir, pcap_file, file_name)):
                     faces_detected += 1
             except:
                 pass
