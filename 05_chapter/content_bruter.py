@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-'''web app mapper'''
+'''content bruter'''
 
 # standard imports
 import argparse
@@ -18,7 +18,7 @@ def getargs():
     parser = argparse.ArgumentParser(description='BHP Web Examples')
 
     parser.add_argument('url', nargs='?', default='http://testphp.vulnweb.com', help='the target url')
-    parser.add_argument('-tc', '--thread_count', default=50, help='number of threads to use')
+    parser.add_argument('-tc', '--thread_count', default=5, help='number of threads to use')
     parser.add_argument('-w', '--wordlist', default='all.txt', help='file containing the words to search for')
     parser.add_argument('-a', '--user_agent',
                         default='Mozilla/5.0 (X11; Linux x86_64; rv:19.0) Gecko/20100101 Firefox/19.0',
@@ -143,7 +143,7 @@ def main():
     queue = build_wordqueue(wordlist_file)
 
     # construct and start the threads
-    build_threads(threads, dir_bruter, (target_url, user_agent, queue, extensions))
-
+    starter = build_threads(threads, dir_bruter, (target_url, user_agent, queue, extensions))
+    starter()
         
 main()
