@@ -16,7 +16,7 @@ def getargs():
     # process the command line
     parser = argparse.ArgumentParser(description='BHP Web Examples')
 
-    parser.add_argument('url', nargs='?', default='http://www.blackhatpython.com', help='the target url')
+    parser.add_argument('url', nargs='?', default='http://www.joomla.org', help='the target url')
     parser.add_argument('-tc', '--thread_count', default=10, help='number of threads to use')
     parser.add_argument('-d', '--output_directory', default='./web_app_mapper_results',
                         help='the folder to store results in')
@@ -48,12 +48,14 @@ def build_path_queue(directory, filters):
 
 def test_remote(web_paths, target):
     '''check the queue to see if the path exists on the remote site'''
-    return
     while not web_paths.empty():
+        print web_paths.qsize()
+        
         path = web_paths.get()
         url = '%s%s' % (target, path)
 
         request = urllib2.Request(url)
+        print request.get_full_url()
         try:
             response = urllib2.urlopen(request)
             content = response.read()
@@ -62,6 +64,7 @@ def test_remote(web_paths, target):
         except urllib2.HTTPError as err:
             # print 'Failed %s' % error.code
             pass
+
 def build_threads(thread_count, queue, url):
     '''spawn the threads'''
     for i in range(thread_count):
