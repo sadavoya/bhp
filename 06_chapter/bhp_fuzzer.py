@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-'''joomla killer'''
+'''bhp fuzzer'''
 
 from burp import IBurpExtender
 from burp import IIntruderPayloadGeneratorFactory
