@@ -14,6 +14,7 @@ import urllib2
 import json
 import re
 import base64
+import threading
 
 
 class BurpExtender(IBurpExtender, IContextMenuFactory):
@@ -43,7 +44,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
         '''bing the selected data'''
         # grab the details of what the user clicked
         http_traffic = self.context.getSelectedMessages()
-        print '%d requests highlighted'
+        print '%d requests highlighted' % len(http_traffic)
 
         for traffic in http_traffic:
             http_service = traffic.getHttpService()
@@ -63,10 +64,14 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
             domain = True
 
         bing_query_string = "'ip:%s'" % ip_address
-        self.bing_query(bing_query_string)
+        self.do_bing_query(bing_query_string)
         if domain:
             bing_query_string = "'domain:%s'" % host
-            self.bing_query(bing_query_string)
+            self.do_bing_query(bing_query_string)
+    def do_bing_query(self, bing_query_string):
+        '''start a bing_query thread'''
+        thread = threading.Thread(target=bing_runner, args=(self, bing_query_string))
+        thread.start()
     def bing_query(self, bing_query_string):
         '''query bing'''
         print 'Performing Bing search: %s' % bing_query_string
@@ -84,12 +89,14 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
         http_request += 'Authorization: Basic %s\r\n' % my_key
         http_request += 'User-Agent: %s' % agent
 
+        print 'Making http_request...',
         json_body = self._callbacks.makeHttpRequest(host, 443, True, http_request).tostring()
         json_body = json_body.split('\r\n\r\n', 1)[1]
+        print 'done.'
 
         try:
             r = json.loads(json_body)
-
+            print str(r)
             if len(r['d']['results']):
                 for site in r['d']['results']:
                     print '*' * 100
@@ -102,7 +109,11 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
                     if not self._callbacks.isInScope(j_url):
                         print 'Adding to Burp Scope'
                         self._callbacks.includeInScope(j_url)
-        except:
-            print 'No results from Bing'
+        except Exception as err:
+            print str(err)
+            #print 'No results from Bing'
         return
 
+def bing_runner(bext, bing_query_string):
+    '''run bing_query'''
+    bext.bing_query(bing_query_string)
