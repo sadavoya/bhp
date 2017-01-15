@@ -79,8 +79,11 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
         # encode our query
         quoted_query = urllib.quote(bing_query_string)
         my_key = base64.b64encode(':%s' % self.get_my_key())
+
         host = 'api.datamarket.azure.com'
+        host = 'api.cognitive.microsoft.com'
         base_url = 'https://%s/Bing/Search/Web' % host
+        base_url = 'https://%s/bing/v5.0/search?q='
         agent = 'Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0'
         http_request = 'GET %s?$format=json&$top=20&Query=%s' % (base_url, quoted_query)
         http_request += ' HTTP/1.1\r\n'
@@ -114,6 +117,6 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
             #print 'No results from Bing'
         return
 
-def bing_runner(bext, bing_query_string):
+def bing_runner(burp_ext, bing_query_string):
     '''run bing_query'''
-    bext.bing_query(bing_query_string)
+    burp_ext.bing_query(bing_query_string)
