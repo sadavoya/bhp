@@ -2,7 +2,7 @@
 '''bhp bing'''
 
 from burp import IBurpExtender
-from burp import IContextMenuExtenderFactory
+from burp import IContextMenuFactory
 
 from javax.swing import JMenuItem
 from java.net import URL
@@ -15,14 +15,13 @@ import json
 import re
 import base64
 
-BING_API_KEY = get_my_key()
-def get_my_key():
-    '''Gets a bing key'''
-    return '79d54ab82d0746e6bb74e31560f34a69'
 
-
-class BurpExtender(IBurpExtender, IContextMenuExtenderFactory):
+class BurpExtender(IBurpExtender, IContextMenuFactory):
     '''Custom code to bing search on burp data'''
+    def get_my_key(self):
+        '''Gets a bing key'''
+        return '79d54ab82d0746e6bb74e31560f34a69'
+
     def registerExtenderCallbacks(self, callbacks):
         '''register with burp'''
         self._callbacks = callbacks
@@ -34,7 +33,7 @@ class BurpExtender(IBurpExtender, IContextMenuExtenderFactory):
         callbacks.registerContextMenuFactory(self)
 
         return
-    def createContextMenu(self, context_menu):
+    def createMenuItems(self, context_menu):
         '''create context menu'''
         self.context = context_menu
         menu_list = ArrayList()
@@ -70,5 +69,40 @@ class BurpExtender(IBurpExtender, IContextMenuExtenderFactory):
             self.bing_query(bing_query_string)
     def bing_query(self, bing_query_string):
         '''query bing'''
-        pass
+        print 'Performing Bing search: %s' % bing_query_string
+
+        # encode our query
+        quoted_query = urllib.quote(bing_query_string)
+        my_key = base64.b64encode(':%s' % self.get_my_key())
+        host = 'api.datamarket.azure.com'
+        base_url = 'https://%s/Bing/Search/Web' % host
+        agent = 'Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0'
+        http_request = 'GET %s?$format=json&$top=20&Query=%s' % (base_url, quoted_query)
+        http_request += ' HTTP/1.1\r\n'
+        http_request += 'Host: %s\r\n' % host
+        http_request += 'Connection: close\r\n'
+        http_request += 'Authorization: Basic %s\r\n' % my_key
+        http_request += 'User-Agent: %s' % agent
+
+        json_body = self._callbacks.makeHttpRequest(host, 443, True, http_request).tostring()
+        json_body = json_body.split('\r\n\r\n', 1)[1]
+
+        try:
+            r = json.loads(json_body)
+
+            if len(r['d']['results']):
+                for site in r['d']['results']:
+                    print '*' * 100
+                    print site['Title']
+                    print site['Url']
+                    print site['Description']
+                    print '*' * 100
+                    j_url = URL(site['Url'])
+
+                    if not self._callbacks.isInScope(j_url):
+                        print 'Adding to Burp Scope'
+                        self._callbacks.includeInScope(j_url)
+        except:
+            print 'No results from Bing'
+        return
 
