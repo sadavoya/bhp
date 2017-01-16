@@ -61,6 +61,8 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
             http_service = traffic.getHttpService()
             host = http_service.getHost()
 
+            # print 'host: %s' % host                
+
             self.hosts.add(host)
 
             http_response = traffic.getResponse()
@@ -70,14 +72,21 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
         return
     def get_words(self, http_response):
         '''get words from response'''
+        #print 'getting words...'
         headers, body = http_response.tostring().split('\r\n\r\n', 1)
         # skip non-text responses
-        if headers.lower().find('content-type:: text') == -1:
+        if headers.lower().find('content-type: text') == -1:
             return
+
         tag_stripper = TagStripper()
         page_text = tag_stripper.strip(body)
 
-        words = re.findall('[a-zA-Z]\w{2,}', page_text)
+        try:
+            words = re.findall("[a-zA-Z]\w{2,}", page_text)
+        except Exception as err:
+            print "Error: %s" % str(err)
+        
+        print 'getting [%d] words' % len(words)
         for word in words:
             # filter out long strings
             if len(word) <= 12:
