@@ -22,7 +22,7 @@ def get_target_sites():
         LOGIN_FORM_INDEX : 0,
         OWNED : False
     }
-    logout = 'https:/%s/Logout?hl=en%continue=https:/%s/' % GOOGLE, GOOGLE
+    logout = 'https:/%s/Logout?hl=en&continue=https:/%s/' % GOOGLE, GOOGLE
     target_sites[GOOGLE] = {
         LOGOUT_URL : logout + 'ServiceLogin%3Fservice%3Dmail',
         LOGOUT_FORM : None,
