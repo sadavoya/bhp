@@ -1,5 +1,6 @@
 '''shell exec'''
-
+''' PREREQUISITE: Learn windows shellcode generation using metasploit or similar
+    https://www.offensive-security.com/metasploit-unleashed/generating-payloads/'''
 import urllib2
 import ctypes
 import base64
