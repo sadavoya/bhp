@@ -92,3 +92,4 @@ def main():
                 except:
                     pass
             time.sleep(5)
+main()
