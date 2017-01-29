@@ -9,7 +9,11 @@ def run_f_for_all_xs(func, targets):
     '''map func on targets'''
     results = []
     for target in targets:
-        results.append(func(target))
+        try:
+            pargs = iter(target)
+        except:
+            pargs = iter((target,))
+        results.append(func(*pargs))
     return tuple(results)
 
 def try_close_handle(action, name):
@@ -26,10 +30,10 @@ def main():
     #determine the size of all monitors in pixels
     # pylint: disable=unbalanced-tuple-unpacking
     (width, height, left, top) = run_f_for_all_xs(win32api.GetSystemMetrics, [
-        win32con.SM_CXVIRTUALSCREEN,
-        win32con.SM_CYVIRTUALSCREEN,
-        win32con.SM_XVIRTUALSCREEN,
-        win32con.SM_YVIRTUALSCREEN
+        (win32con.SM_CXVIRTUALSCREEN),
+        (win32con.SM_CYVIRTUALSCREEN),
+        (win32con.SM_XVIRTUALSCREEN),
+        (win32con.SM_YVIRTUALSCREEN)
     ])
     # width, height, left, top = (
     #     win32api.GetSystemMetrics(win32con.SM_CXVIRTUALSCREEN),
@@ -56,7 +60,8 @@ def main():
     finally:
         # free our objects
         run_f_for_all_xs(try_close_handle, [
-            lambda: mem_dc.DeleteDC(),
-            lambda: win32gui.DeleteObject(screenshot.GetHandle())
+            (lambda: mem_dc.DeleteDC(), 'mem_dc.DeleteDC()'),
+            (lambda: win32gui.DeleteObject(screenshot.GetHandle()),
+             'win32gui.DeleteObject(screenshot.GetHandle())')
         ])
 main()
