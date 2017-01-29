@@ -51,7 +51,8 @@ def main():
     while True:
         # check if we own all sites
         all_owned = True
-        for site in target_sites:
+        for url in target_sites:
+            site = target_sites[url]
             if not site[OWNED]:
                 all_owned = False
                 break
