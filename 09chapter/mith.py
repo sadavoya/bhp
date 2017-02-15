@@ -22,6 +22,12 @@ def get_target_sites():
         LOGIN_FORM_INDEX : 0,
         OWNED : False
     }
+    # THE LOGOUT URL IS OUTDATED. NEED TO CLICK THE SIGNOUT BUTTON INSTEAD, 
+    # OR BETTER YET LOOK FOR THE SIGNOUT BUTTON AND GRAB IT'S URL
+    # At this time, the logout URL includes a token which we need to grab to perform the logout.
+    # You will need to update this approach to work with GMAIL's current setup as this will probably change with time
+    # As this is just example code, I'm stopping here,
+    # But the facebook code may work. I'm giving up for now.
     logout = 'https:/%s/Logout?hl=en&continue=https:/%s/' % (GOOGLE, GOOGLE)
     target_sites[GOOGLE] = {
         LOGOUT_URL : logout + 'ServiceLogin%3Fservice%3Dmail',
