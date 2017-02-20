@@ -3,3 +3,6 @@ cain.txt
 my_conn.py
 example_code/*
 paramiko/*
+.vscode/launch.json
+priv.key
+kvps.txt
